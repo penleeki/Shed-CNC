@@ -1,0 +1,32 @@
+#######################################
+# Syntax Coloring Map For cnclib
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+gCode	KEYWORD1
+vec3	KEYWORD1
+cnclib	KEYWORD1
+lineCoords	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+codeFromLine	KEYWORD2
+line_numSteps	KEYWORD2
+line_delta	KEYWORD2
+curve_numSteps	KEYWORD2
+addVec3	KEYWORD2
+curve_delta	KEYWORD2
+UNUSED_AXIS	KEYWORD2
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
