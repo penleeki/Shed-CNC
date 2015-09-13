@@ -11,7 +11,7 @@ really want to develop it further than that. It is also still a work in progress
 through for anyone else building something similar though, as I couldn't find many resources when I was 
 writing it.
 
-Everything is internally integer based to the scale of the smallest unit of movment my machine can detect (0.1mm).
+Everything is internally integer based to the scale of the smallest unit of movement my machine can detect (0.1mm).
 
 The curve generating code is based on the principles of the midpoint circle algorithm:
 (https://en.wikipedia.org/wiki/Midpoint_circle_algorithm)
