@@ -1,4 +1,13 @@
-﻿using UnityEngine;
+﻿// Code for generating GCode for a CNC machine from 3D geometry
+// Written by Laurence Shann (laurence.shann@gmail.com)
+//----------------------------------------------------------------------------------------
+// This work is licensed under the Creative Commons Attribution 4.0 International License. 
+// To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/ or 
+// send a letter to Creative Commons, 444 Castro Street, Suite 900, Mountain View, 
+// California, 94041, USA.
+//----------------------------------------------------------------------------------------
+
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
