@@ -12,6 +12,7 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 int cnclib::DECIMAL_PLACES = 2;
 int cnclib::UNUSED_AXIS = INT_MAX;
@@ -121,32 +122,9 @@ int cnclib::quick_pow10(int n)
 
 int cnclib::valueFromStr(char* str, int ticksPermm)
 {
-
-	int64_t v = 0;
-	int i = 0;
-	bool negative=false;
-	int decimals = 0;
-	while(str[i]!=' ' && str[i] != '\0' && str[i] != '\n' && decimals<=DECIMAL_PLACES ){
-		if(str[i]=='-') negative = true;
-		if(str[i]=='.') decimals++;
-		if(str[i]>=48 && str[i]<=48+10){
-			v *= 10;
-			v += (int) str[i]-48;
-			if(decimals>0) decimals++;
-		}
-		i++;
-	}
-	if(decimals==0) decimals=1;
-	while(decimals<=DECIMAL_PLACES)
-	{
-		v*=10;
-		decimals++;
-	}
-	// now v is in millimeters x10^DECIMAL_PLACES
-	v*=ticksPermm;
-	v/=quick_pow10(DECIMAL_PLACES);
-	// now v is in internal cnc machine units
-	return negative?-v:v;
+	double f = strtod(str, NULL);
+	f *= (double) ticksPermm;
+	return round(f);
 }
 
 int cnclib::findNextKeyLetter(char* str, int offset)
@@ -172,7 +150,7 @@ int cnclib::findNextKeyLetter(char* str, int offset)
 gCode cnclib::codeFromLine(char* str, int ticksPermm)
 {
 	gCode g;
-	g.num = 0;
+	g.num = -1;
 	g.x=g.y=g.z=g.i=g.j=g.k=UNUSED_AXIS;
 
 	int command = findNextKeyLetter(str,0);

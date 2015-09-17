@@ -35,6 +35,7 @@ public class CNCSend : MonoBehaviour {
     public bool sendFile = false;
     public string filename = "";
     
+	public bool busy = false;
 
     float m_LastEditorUpdateTime;
     void OnEnable()
@@ -44,7 +45,8 @@ public class CNCSend : MonoBehaviour {
         EditorApplication.update += OnEditorUpdate;
         #endif
         if (port != null) ClosePort();
-        openPort = false; 
+        openPort = false;
+		ports = null;
     }
     void OnEditorUpdate()
     {
@@ -110,35 +112,55 @@ public class CNCSend : MonoBehaviour {
         port = null;
     }
 
+	public List<string> commandQueue;
+	public string received;
+
     void ProcessOpenPort()
     {
+		if (commandQueue == null)
+			commandQueue = new List<string> ();
+
         if (sendSingleCommand)
         {
+			received="";
             sendSingleCommand = false;
-            GCodeOp(singleCommand + "\r\n");
+			commandQueue.Add(singleCommand + "\r\n");
         }
 
         if (sendFile)
         {
+			received="";
             sendFile = false;
             SendTextFile();
         }
 
-        string completeString = "";
-        string s2 = "";
-        do
-        {
-            try
-            {
-                char c = (char)port.ReadChar();
-                s2 = ""+c;
-                completeString=completeString+c;
-            }
-            catch (TimeoutException) { s2 = ""; }
-        } while (s2 != "");
-        if (completeString != "") Debug.Log(">"+completeString);
+		if (commandQueue.Count > 0 && !busy) {
+			string next = commandQueue[0];
+			commandQueue.RemoveAt(0);
+			GCodeOp(next);
+			busy=true;
+		}
 
-    }
+		int recLen = 0;
+        try
+        {
+			do{
+				recLen = received.Length;
+            	received = received + (char)port.ReadChar();
+			}while(recLen != received.Length);
+		}
+        catch (TimeoutException) {}
+        
+       
+		if (received.Contains (response_success)) {
+			Debug.Log (received);
+			received="";
+			busy = false;
+		} else if (received.Contains ("\n")) {
+			Debug.Log (received);
+			received="";
+		}
+	}
 
 
     void SendTextFile()
@@ -153,7 +175,7 @@ public class CNCSend : MonoBehaviour {
 
                 while (line != null)
                 {
-                    GCodeOp(line + "\r\n");
+                    commandQueue.Add(line + "\r\n");
                     line = sr.ReadLine();
                 }
             }
@@ -167,8 +189,9 @@ public class CNCSend : MonoBehaviour {
 
     void GCodeOp(string s)
     {
-        string received = "";
+        //string received = "";
         port.WriteLine(s + "\r\n");
+		/*
         do
         {
             try
@@ -178,7 +201,7 @@ public class CNCSend : MonoBehaviour {
             catch (TimeoutException) {}
         } while (!received.Contains(response_success));
         Debug.Log("Data: "+received);
-        Debug.Log("...done...");
+        Debug.Log("...done...");*/
     }
 
     
