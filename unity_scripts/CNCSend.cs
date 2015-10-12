@@ -50,7 +50,7 @@ public class CNCSend : MonoBehaviour {
     }
     void OnEditorUpdate()
     {
-        if (Time.realtimeSinceStartup > m_LastEditorUpdateTime+0.5f)
+        if (Time.realtimeSinceStartup > m_LastEditorUpdateTime+0.1f)
         {
             m_LastEditorUpdateTime = Time.realtimeSinceStartup;
             if (ports == null || ports.Length < 1)
@@ -113,7 +113,10 @@ public class CNCSend : MonoBehaviour {
     }
 
 	public List<string> commandQueue;
+
+	[TextArea(10,10)]
 	public string received;
+
 
     void ProcessOpenPort()
     {
@@ -153,12 +156,14 @@ public class CNCSend : MonoBehaviour {
         
        
 		if (received.Contains (response_success)) {
-			Debug.Log (received);
+
+			if(received.Contains("DEBOUNCE") || received.Contains("{") || received.Contains("<")){
+				Debug.LogWarning ("<color=yellow>"+received+"</color>");
+			}else{
+				Debug.Log (received);
+			}
 			received="";
 			busy = false;
-		} else if (received.Contains ("\n")) {
-			Debug.Log (received);
-			received="";
 		}
 	}
 
