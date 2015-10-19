@@ -39,6 +39,7 @@ void setup()
 {
   ZeroHead();
   pinMode(led_pin, OUTPUT);
+  pinMode(MISO, OUTPUT);
   pinMode(halt_pin, INPUT_PULLUP);
   for (int axis=0; axis<3; axis++){
     pinMode(step_pin[axis], INPUT_PULLUP);
@@ -53,52 +54,69 @@ void setup()
   }
   Serial.begin(9600);
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for Leonardo only
+    Blink(5); // wait for serial port to connect. Needed for Leonardo only
+    delay(1);
   }
   Serial.println("ready");
   inputString.reserve(200);
   
 } 
 
+int blinkCounter=0;
+void Blink(int freq){
+  if(++blinkCounter>freq) blinkCounter=0;
+  digitalWrite(led_pin, (blinkCounter*2>freq)?HIGH:LOW);
+  //MISO MOSI SCK
+  digitalWrite(MISO, (blinkCounter*2>freq)?HIGH:LOW);
+  
+}
+
 void loop() 
 { 
-    if (Serial.available()){
-      char inChar = Serial.read();
-      if(inputString.length()>0 || (inChar>='A' && inChar<='Z')) inputString += inChar;
-      if (inChar == '\r') {
-        stringComplete = true;
-      } 
-      Serial.write(inChar);
-    }
-    
-    if(stringComplete){
-      Serial.println(" ... ");
-      Serial.println("arduino received command");
-      if(inputString[0]=='C'){ Serial.println("centering head"); ZeroHead();}
-      else if(inputString[0]=='G' || inputString[0]=='X' || inputString[0]=='Y' || inputString[0]=='Z') GCodeCommand();
-      else{
-        Serial.print("unrecognized command [");
-        Serial.print(inputString);
-        Serial.println("]");
+    if(Serial){
+      Blink(100);
+      if (Serial.available()){
+        char inChar = Serial.read();
+        if(inputString.length()>0 || (inChar>='A' && inChar<='Z')) inputString += inChar;
+        if (inChar == '\r' || inChar== '\n') {
+          stringComplete = true;
+          inputString += '\0';
+        } 
+        Serial.write(inChar);
       }
-      Serial.println(response_success);
-      inputString="";
-      stringComplete = false;
-    }
-    
-    ManualControl();
-
-    for(int axis=0; axis<3; axis++){
       
-      if(CheckAxisForMovement(axis))
-      {
-        Serial.println("");
-        Serial.print("{r");
-        Serial.print(axis);
-        Serial.print(" - ");
-        Serial.print(millis()-startcommand_millis);
-        Serial.print(" during idle!}");
+      if(stringComplete){
+        Serial.println(" ... ");
+        Serial.println("arduino received command");
+        if(inputString[0]=='C'){ Serial.println("centering head"); ZeroHead();}
+        else if(inputString[0]=='G' || inputString[0]=='X' || inputString[0]=='Y' || inputString[0]=='Z') GCodeCommand();
+        else{
+          Serial.print("unrecognized command [");
+          Serial.print(inputString);
+          Serial.println("]");
+        }
+        Serial.println(response_success);
+        inputString="";
+        stringComplete = false;
       }
+      
+      ManualControl();
+  
+      for(int axis=0; axis<3; axis++){
+        
+        if(CheckAxisForMovement(axis))
+        {
+          Serial.println("");
+          Serial.print("{r");
+          Serial.print(axis);
+          Serial.print(" - ");
+          Serial.print(millis()-startcommand_millis);
+          Serial.print(" during idle!}");
+        }
+      }
+    }else{
+      Blink(5);
+      delay(1);
     }
 }
 
@@ -177,7 +195,6 @@ boolean CheckAxisForMovement(int axis){
       moveHead(axis);
       click_state[axis]=state;
       if(axis==1){
-        digitalWrite(led_pin, state?HIGH:LOW);
         Serial.print("(");
         Serial.print((millis()-startcommand_millis));
         Serial.print(")");
@@ -221,10 +238,13 @@ boolean headToTarget(vec3 target){
       }
     }
     delay(1);
-    while (Serial.available()){
+    Blink(200);
+    while (Serial && Serial.available()){
       if(Serial.read() == 'X'){
         return false;
       }
+      delay(1);
+      Blink(200);
     }
     targetTimer++;
   }while(idleAxes<3 && !checkHalt());
@@ -277,15 +297,16 @@ void GCodeCommand(){
     Serial.print("ENDED AT: "); Serial.print(headPosition.x);
     Serial.print(" y: "); Serial.print(headPosition.y);
     Serial.print(" z: "); Serial.println(headPosition.z);
-  
-  
 }
 
 void CurvedLine(lineCoords line){
   vec3 target;
+  Serial.print("calculating ");
+  Serial.flush();
   int steps = cnclib::curve_numSteps(line);
   Serial.print("steps ");
   Serial.println(steps);
+  Serial.flush();
   for(int s=1; s<=steps; s++){
   //while(true){
     target = cnclib::addVec3(headPosition, cnclib::curve_delta(line, headPosition));
@@ -297,9 +318,12 @@ void CurvedLine(lineCoords line){
 
 void StraightLine(lineCoords line){
   vec3 target;
+  Serial.print("calculating ");
+  Serial.flush();
   int steps = cnclib::line_numSteps(line);
   Serial.print("steps ");
   Serial.println(steps);
+  Serial.flush();
   for(int s=1; s<=steps; s++){
     target = cnclib::addVec3(headPosition, cnclib::line_delta(line, s, steps));
     if (!headToTarget(target)) break;

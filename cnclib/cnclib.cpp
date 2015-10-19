@@ -131,7 +131,7 @@ int cnclib::findNextKeyLetter(char* str, int offset)
 {
 	int i=offset;
 	int r=-1;
-	while(true){
+	while(str[i] != '\0'){
 		if(str[i] =='G'){r=i; break;}
 		if(str[i] =='M'){r=i; break;}
 		if(str[i] =='X'){r=i; break;}
@@ -139,9 +139,8 @@ int cnclib::findNextKeyLetter(char* str, int offset)
 		if(str[i] =='Z'){r=i; break;}
 		if(str[i] =='I'){r=i; break;}
 		if(str[i] =='J'){r=i; break;}
-		if(str[i] =='K'){r=i; break;}
-		if(str[i] =='\0'){r=-1; break;}
-		if(str[i] =='\n'){r=-1; break;}
+        if(str[i] =='K'){r=i; break;}
+        if(i > 10000){r=-1; break;}
 		i++;
 	}
 	return r;
